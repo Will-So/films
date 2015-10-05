@@ -1,0 +1,8 @@
+curl -d "" 'http://en.wikipedia.org/w/index.php?title=Special:Export&pages=Main_Page%0ATalk:Main_Page&offset=1&limit=5&action=submit'
+
+
+curl -d "" 'https://en.wikipedia.org/w/api.php?action=query&format=json&list=categorymembers&cmtype=subcat&cmtitle=Category:Sequels|Films'
+
+curl -d 'https://en.wikipedia.org/w/api.php?action=query&format=json&list=categorymembers&cmtype=subcat&cmtitle=Category:Sequels|Films'
+
+curl https://en.wikipedia.org/w/api.php?action=query&format=json$list=categorymembers&cmtitle=Category:Sequels&cmtitle=Category:Films
