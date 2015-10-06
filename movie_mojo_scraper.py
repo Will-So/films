@@ -54,22 +54,25 @@ def iterate_letters():
 
 def iterate_letter_category(letter_urls):
     """
+    Returns a list of all the letter category URLs. For example,
 
     :param letter:
     :return: List of the URL of letter categories
+
+    Examples
+    ---
+    >>>
     """
     letter_category_urls = []
     for url in letter_urls:
         letter_category_urls.append(url) # The first item is selected automatically
         text = requests.get(url).text
         soup = BeautifulSoup(text)
-
-
-
-
+        soup = soup.find("div", class_="alpha-nav-holder")
+        for link in soup.find_all('a'):
+            letter_category_urls.append('http://www.boxofficemojo.com' + link.get('href'))
 
     return letter_category_urls
-
 
 
 def parse_movies(movie_list):
@@ -99,6 +102,7 @@ def retrieve_attributes(soup):
     :return: list of important attributes.
     """
     movie_attributes = []
+
 
 
     return movie_attributes
