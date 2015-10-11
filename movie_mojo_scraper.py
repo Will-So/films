@@ -20,7 +20,9 @@ from bs4 import BeautifulSoup
 import string
 import pickle
 
-pickle_everything = True
+PICKLE_MOVIE_URLS = True
+TABLE_XPATH =  ('//*[@id="body"]/table[2]/tbody/tr/td/table[1]/tbody/tr/td[2]'
+                '/table/tbody/tr/td/center/table/tbody')
 
 
 def get_movie_urls():
