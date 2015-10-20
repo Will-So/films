@@ -11,6 +11,11 @@ Strategy
     - Retrieve the soup object for each entry
     - Put all of the relevant entries into a list
     - Return each list as a single row of a Pandas df
+
+
+Notes
+~~~~~
+
 """
 
 
@@ -19,6 +24,10 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import string
 import pickle
+from html.parser import HTMLParseError
+import warnings
+from urllib.error import HTTPError
+import time
 
 PICKLE_MOVIE_URLS = True
 TABLE_XPATH =  ('//*[@id="body"]/table[2]/tbody/tr/td/table[1]/tbody/tr/td[2]'
@@ -115,33 +124,51 @@ def parse_movies(movie_list):
     5. Production Budget
     6. Distributor
     7. Release Date
-    8. Actors
 
 
     :param movie_list: List of movie titles
     :return: Pandas Dataframe of
     """
-    cleaned_data = pd.DataFrame()
+    # all_dfs is a list of dataframes of len `movie_list`.
 
+    all_dfs = []
+    failed_urls = []
+    count = 0
     for url in movie_list:
-        request = requests.get(url)
-        soup = BeautifulSoup(request.text)
-        cleaned_data.append(retrieve_attributes(soup))
+        try:
+            df = pd.read_html(url)[5] # The 5th table on BJ is of interest
+            all_dfs.append(df)
+            count += 1
+            if count % 5 == 0:
+                time.sleep(0.5)
+                print("Finished {} frames. {} Failed".format(count, len(failed_urls)))
+        except (UnicodeEncodeError, HTMLParseError, HTTPError) as err:
+            failed_urls.append((url, err))
+            continue
 
-    return cleaned_data
+    if len(failed_urls) > 250:
+        warnings.warn("{} URLs failed to Parse.".format(len(failed_urls)))
+
+    return all_dfs
 
 
-def retrieve_attributes(soup):
+def generate_df(movie_dfs):
     """
-    Helper function for `parse_movies`. Retrieves individual points of data for each movie
-    :param soup:
+    Takes list of dataframes generated from `parse_movies` and returns a clean
+    dataframe from everything
+
+    :param movie_dfs:
     :return: list of important attributes.
     """
-    movie_attributes = []
+    columns = ['gross', 'genres', 'mpaa', 'runtime', 'pg', 'distributor', 'release_date']
+
+    cleaned_df = pd.DataFrame()
+
+    for df in movie_dfs:
+        pass
 
 
-
-    return movie_attributes
+    return cleaned_df
 
 
     ## find the attributes
@@ -149,7 +176,8 @@ def retrieve_attributes(soup):
 
 def main():
     movie_list = get_movie_urls()
-    if pickle_everything:
+    if PICKLE_MOVIE_URLS:
         pickle.dump(movie_list, 'movie_list.pkl')
     movie_data = parse_movies(movie_list)
-    movie_data.to_csv('/Data/films/mojo.csv')
+    df = generate_df(movie_data)
+    df.to_csv('/Data/films/mojo.csv')
