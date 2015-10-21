@@ -30,6 +30,7 @@ from urllib.error import HTTPError
 import time
 
 PICKLE_MOVIE_URLS = True
+PICKLE_ARRAYS = True
 TABLE_XPATH =  ('//*[@id="body"]/table[2]/tbody/tr/td/table[1]/tbody/tr/td[2]'
                 '/table/tbody/tr/td/center/table/tbody')
 
@@ -127,17 +128,23 @@ def parse_movies(movie_list):
 
 
     :param movie_list: List of movie titles
-    :return: Pandas Dataframe of
+    :return: A list of Numpy arrays with all relevant stats and name
+
+    Example
+    ---
+
     """
     # all_dfs is a list of dataframes of len `movie_list`.
 
     all_dfs = []
     failed_urls = []
+    names = []
     count = 0
     for url in movie_list:
         try:
             df = pd.read_html(url)[5] # The 5th table on BJ is of interest
             all_dfs.append(df)
+            names.append(re.search('(\w+?).htm', url).group(1))
             count += 1
             if count % 5 == 0:
                 time.sleep(0.5)
@@ -149,7 +156,12 @@ def parse_movies(movie_list):
     if len(failed_urls) > 250:
         warnings.warn("{} URLs failed to Parse.".format(len(failed_urls)))
 
-    return all_dfs
+    if PICKLE_ARRAYS:
+        with open('arrays.pkl', 'wb') as picklefile:
+            pickle.dump(arrays, picklefile)
+
+    arrays = [np.append(name, df) for name, df in zip(names, all_dfs)]
+    return arrays
 
 
 def generate_df(movie_dfs):
@@ -160,9 +172,13 @@ def generate_df(movie_dfs):
     :param movie_dfs:
     :return: list of important attributes.
     """
-    columns = ['gross', 'genres', 'mpaa', 'runtime', 'pg', 'distributor', 'release_date']
+    columns = ['name', 'gross', 'genres', 'mpaa', 'runtime', 'pg', 'distributor', 'release_date']
 
-    cleaned_df = pd.DataFrame()
+
+    cleaned_df = pd.DataFrame(arrays)
+    cleaned_df = cleaned_df.drop([2], axis=1) # Extraneous Column
+
+    cleaned_df.columns = columns
 
     for df in movie_dfs:
         pass
