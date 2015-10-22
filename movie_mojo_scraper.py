@@ -180,9 +180,6 @@ def generate_df(movie_dfs):
 
     cleaned_df.columns = columns
 
-    for df in movie_dfs:
-        pass
-
 
     return cleaned_df
 
